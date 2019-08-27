@@ -2,7 +2,7 @@ library(plotrix)
 library(mvtnorm)
 
 #Data
-setwd('C:\\Users\\myb\\Desktop\\new\\Sarah Jacobs')
+setwd('C:\\Matias\\Analyses\\Growth\\Greynurse recapture')
   #tag and recapture info
 TL.rel=188
 TL.rec=246
