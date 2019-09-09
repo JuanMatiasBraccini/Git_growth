@@ -75,60 +75,71 @@ Age.rec.TL=Age.rec.TL[Age.rec.TL>=(0.5*min(Age.rel)+Time.liberty)]
 Smry.age.rec.TL=round(as.data.frame(t(as.matrix(summary(Age.rec.TL)))),1)
 
 #figure 2
+add.Tabl=F
 Ymax=300
 Xmax=max(age)
+
 jpeg(file='figure2.jpg',width=2400,height=2000,units="px",res=300)
 par(mar=c(1,1,1,.1),oma=c(2,3,.1,.5),las=1,mgp=c(1,.5,0),cex.axis=1.25)
 plot(1,1,col='transparent',xlim=c(0,Xmax),ylim=c(0,Ymax), yaxs="i",xaxs="i",
      ylab="",xlab="")
-for(i in 1:N.sim) lines(age,Sim.tl[,i],col=rgb(.1,.1,.1,alpha=.01))
+for(i in 1:N.sim) lines(age,Sim.tl[,i],col=rgb(.1,.1,.3,alpha=.02))
 mtext("Total length (cm)",2,las=3,line=2.5,cex=1.5)
 mtext("Age",1,line=1.5,cex=1.5)
 
 #add distribution
-CL.dis="grey40"
+CL.dis=rgb(.1,.1,.1,alpha=.45)
 den=density(Age.rel,adjust=2)
 X=den$x
 Y=rescale(den$y,c(TL.rel,TL.rel*1.2))
 polygon(X,Y,col=CL.dis,border=CL.dis)
-addtable2plot(Smry.age.rel$Median ,TL.rel-20,Smry.age.rel,bty="o",xjust=0.2,
+if(add.Tabl)addtable2plot(Smry.age.rel$Median ,TL.rel-20,Smry.age.rel,bty="o",xjust=0.2,
               display.rownames=F,hlines=F,vlines=F,cex=1)
-
-
 den=density(Age.rec.TL,adjust=2)
 X=den$x
 Y=rescale(den$y,c(TL.rec,TL.rec*1.2))
 polygon(X,Y,col=CL.dis,border=CL.dis)
-addtable2plot(Smry.age.rec.TL$Median ,TL.rec-20,Smry.age.rec.TL,bty="o",xjust=0.4,
+if(add.Tabl)addtable2plot(Smry.age.rec.TL$Median ,TL.rec-20,Smry.age.rec.TL,bty="o",xjust=0.4,
               display.rownames=F,hlines=F,vlines=F,cex=1)
-
 lines(age,LT,lwd=2,col="black")
 abline(h=TL.rel,lwd=1.5,lty=2)
-text(0,TL.rel,'TL @ release',srt=50,pos=4)
+text(-.5,TL.rel+5,'Release',pos=4)
 abline(h=TL.rec,lwd=1.5,lty=2)
-text(0,TL.rec,'TL @ recapture',srt=50,pos=4)
+text(-.5,TL.rec+5,'Recapture',pos=4)
 dev.off()
 
 
+# Quants=apply(Sim.tl, 1, quantile, probs = c(0,0.025,0.975,1),  na.rm = TRUE)
 # jpeg(file='figure2.jpg',width=2400,height=2000,units="px",res=300)
-# par(mfcol=c(2,1),mar=c(1,1,1,.1),oma=c(3,3,.1,.5),las=1,mgp=c(1,.5,0))
-# plot(1,1,col='transparent',xlim=c(0,40),ylim=c(0,300), yaxs="i",xaxs="i",
+# par(mar=c(1,1,1,.1),oma=c(2,3,.1,.5),las=1,mgp=c(1,.5,0),cex.axis=1.25)
+# plot(1,1,col='transparent',xlim=c(0,Xmax),ylim=c(0,Ymax), yaxs="i",xaxs="i",
 #      ylab="",xlab="")
-# for(i in 1:N.sim) lines(age,Sim.tl[,i],col=rgb(.1,.1,.1,alpha=.01))
-# lines(age,LT,lwd=2)
+# CL.dis=rgb(.1,.1,.3,alpha=.5)
+# X=c(age,rev(age))
+# Y=c(Quants[1,],rev(Quants[4,]))
+# polygon(X,Y,col=CL.dis,border=CL.dis)
+# 
+# CL.dis=rgb(.1,.1,.3,alpha=.2)
+# Y=c(Quants[2,],rev(Quants[3,]))
+# polygon(X,Y,col=CL.dis,border=CL.dis)
+# 
+# 
+# mtext("Total length (cm)",2,las=3,line=2.5,cex=1.5)
+# mtext("Age",1,line=1.5,cex=1.5)
+# 
+# #add distribution
+# CL.dis=rgb(.1,.1,.3,alpha=.5)
+# den=density(Age.rel,adjust=2)
+# X=den$x
+# Y=rescale(den$y,c(TL.rel,TL.rel*1.2))
+# polygon(X,Y,col=CL.dis,border=CL.dis)
+# den=density(Age.rec.TL,adjust=2)
+# X=den$x
+# Y=rescale(den$y,c(TL.rec,TL.rec*1.2))
+# polygon(X,Y,col=CL.dis,border=CL.dis)
+# lines(age,LT,lwd=2,col="black")
 # abline(h=TL.rel,lwd=1.5,lty=2)
-# mtext("Total length (cm)",2,las=3,line=2)
-# 
-# a=hist(Age.rel,breaks=age,plot=F)
-# plot(a$mids,a$counts,type='h',xlim=range(age),main="")
-# addtable2plot(Smry.age.rel$Median ,400,Smry.age.rel,bty="o",xjust=0.4,
-#               display.rownames=F,hlines=F,vlines=F,cex=.9)
-# par(new=T)
-# a=hist(Age.rec,breaks=age,plot=F)
-# plot(a$mids,a$counts,type='h',xlim=range(age),main="")
-# addtable2plot(Smry.age.rec$Median ,400,Smry.age.rec,bty="o",xjust=0.4,
-#               display.rownames=F,hlines=F,vlines=F,cex=.9)
-# 
-# mtext("Age",1,line=1.5)
-# mtext("Frequency",2,las=3,line=2)
+# text(-.5,TL.rel+5,'Release',pos=4)
+# abline(h=TL.rec,lwd=1.5,lty=2)
+# text(-.5,TL.rec+5,'Recapture',pos=4)
 # dev.off()
