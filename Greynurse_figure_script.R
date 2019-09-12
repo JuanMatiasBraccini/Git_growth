@@ -143,3 +143,223 @@ dev.off()
 # abline(h=TL.rec,lwd=1.5,lty=2)
 # text(-.5,TL.rec+5,'Recapture',pos=4)
 # dev.off()
+
+
+
+#-------------Figure 1------------------
+library(PBSmapping)
+library(lubridate)
+library(geosphere)
+library(raster) #for scalebar
+SMN=read.csv("Acous.tags_SMN.csv",stringsAsFactors = F, sep = ";")
+PerthIs=read.table("WAislandsPointsNew.txt", header=T)
+Rottnest.Is=subset(PerthIs,ID%in%c("ROTT1"))
+Garden.Is=subset(PerthIs,ID%in%c("ROTT3"))
+STATIONS=read.csv('Receivers.csv',stringsAsFactors = F)
+#For SCALER
+# fuür SMN
+#d=read.csv("Acous.tags_SMN.csv", sep = ";")
+#SMN=read.csv("Acous.tags_SMN.csv", sep = ";")
+d$ReleaseLatitude=-abs(d$ReleaseLatitude)
+d$Latitude=-abs(d$Latitude)
+d=subset(SMN,Sex=="F")
+k=subset(SMN,Sex=="M")
+
+REls=SMN[!duplicated(SMN$TagCode),match(c("TagCode","ReleaseLatitude","ReleaseLongitude"),names(SMN))]
+REls=rbind(REls,data.frame(TagCode=29445,ReleaseLatitude=34.351,ReleaseLongitude=115.22))
+REls$ReleaseLatitude=-abs(REls$ReleaseLatitude)
+m=SMN
+#female
+d$Station=with(d,paste(Longitude,Latitude))
+Tab=table(d$Station)
+Tab=data.frame(Tab)
+names(Tab)=c('Station',"detections")
+Tab1=data.frame(do.call('rbind', strsplit(as.character(Tab$Station),' ',fixed=TRUE)))
+names(Tab1)=c("Long","Lat")
+Tab=cbind(Tab,Tab1)
+Tab$Long=as.numeric(as.character(Tab$Long))
+Tab$Lat=as.numeric(as.character(Tab$Lat))
+#male
+k$Station=with(k,paste(Longitude,Latitude))
+Tab3=table(k$Station)
+Tab3=data.frame(Tab3)
+names(Tab3)=c('Station',"detections")
+Tab4=data.frame(do.call('rbind', strsplit(as.character(Tab3$Station),' ',fixed=TRUE)))
+names(Tab4)=c("Long","Lat")
+Tab3=cbind(Tab3,Tab4)
+Tab3$Long=as.numeric(as.character(Tab3$Long))
+Tab3$Lat=as.numeric(as.character(Tab3$Lat))
+#for scale 
+m$Station=with(m,paste(Longitude,Latitude))
+Tab5=table(m$Station)
+Tab5=data.frame(Tab5)
+names(Tab5)=c('Station',"detections")
+Tab6=data.frame(do.call('rbind', strsplit(as.character(Tab5$Station),' ',fixed=TRUE)))
+names(Tab6)=c("Long","Lat")
+Tab5=cbind(Tab5,Tab6)
+Tab5$Long=as.numeric(as.character(Tab5$Long))
+Tab5$Lat=as.numeric(as.character(Tab5$Lat))
+
+#fn.scale=function(x,scaler) ((x/max(x))^0.5)*scaler
+fn.scale=function(x,scaler) scaler*log(x)/max(log(x))
+x=c(10,100,250,500,1000)
+scaler=5
+#CEX=mapply(fn.scale,x,max(x),scaler)
+#CEX=3
+#plot(1:length(x),cex=CEX)
+
+#MAPPING
+
+
+fn.plt.mp=function(PlotlonG,PlotlatT,Add.depth,add.closure)
+{
+  plotMap(worldLLhigh, xlim=PlotlonG,ylim=PlotlatT,plt = c(.001, 1, 0.075, 1),
+          col=COLOR,tck = 0.025, tckMinor = 0.0125, xlab="",ylab="",axes=F)
+  #if(add.closure=="YES") plot(WA_Northern_Shark_2,add=T,col="grey85",border=1)
+  if(Add.depth=="YES")
+  {
+    contour(xbat, ybat, reshaped[,2:ncol(reshaped)],ylim=YLIM,xlim=XLIM, zlim=c(-1,-200),
+            nlevels = 3,labcex=.8,lty = 1,col=c("darkgrey","darkgrey","darkgrey","darkgrey","transparent"),add=T)
+  }
+  
+}
+fn.poli=function(XLIM,YLIM,CL,LW)
+{
+  polygon(x=c(XLIM,rev(XLIM)),y=c(YLIM[1],YLIM[1],YLIM[2],YLIM[2]),lwd=LW,border=CL)
+}
+fnX=function(x=0.9)points(STATIONS$longitude,STATIONS$latitude,pch=21,bg="white",col="grey30",cex=x)
+
+data(worldLLhigh)
+COLOR="grey75"
+
+tiff(file="Figure 1.tiff",width = 3200, height = 3000,   
+     units = "px", res = 300,compression = "lzw")
+par(mar = c(3.2, 5, 0.95, 0),oma=c(1,.1,.1,1),mgp=c(1,.75,0))
+layout(matrix(cbind(rep(c(3,1,2),1),c(4,4,4)),3,2))
+layout.show(4)
+
+# Perth array 
+EE1=c(115.17,116)
+FF1=c(-32.3,-31.8)
+LONGSEQ=EE1[1]:EE1[2]
+LATSEQ=seq(ceiling(FF1[1]),ceiling(FF1[2]),by=1)
+LATSEQ2=seq(ceiling(FF1[1]),ceiling(FF1[2]),by=2)
+fn.plt.mp(EE1,FF1,"NO",'YES')
+box(lwd=2,col="forestgreen")
+polygon(x=Rottnest.Is$Longitude,y=Rottnest.Is$Latitude,col="grey")  #add missing islands
+polygon(x=Garden.Is$Longitude,y=Garden.Is$Latitude,col="grey")
+fnX()
+points(Tab5$Long,Tab5$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="pink",
+       bg=rgb(.5,.1,.1,alpha=.2))
+points(Tab3$Long,Tab3$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="blue",
+       bg=rgb(.1,.1,.5,alpha=.2))
+
+text(115.75,-32.09,"Cockburn",cex=1.5,col='grey10',font=2,pos=4)
+text(115.8,-32.15,"sound",cex=1.5,col='grey10',font=2,pos=4)
+legend('topright',"2",bty="n",cex=3)
+
+#Southern Array
+EE=c(114.5305,116.6)
+FF=c(-35.39,-34)
+LONGSEQ=EE[1]:EE[2]
+LATSEQ=seq(ceiling(FF[1]),ceiling(FF[2]),by=1)
+LATSEQ2=seq(ceiling(FF[1]),ceiling(FF[2]),by=2)
+fn.plt.mp(EE,FF,"NO",'YES')
+box(lwd=2,col="forestgreen")
+fnX()
+points(Tab$Long,Tab$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="pink",
+       bg=rgb(.5,.1,.1,alpha=.2))
+points(Tab3$Long,Tab3$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="blue",
+       bg=rgb(.1,.1,.5,alpha=.2))
+legend('topright',"3",bty="n",cex=3)
+
+#Ningaloo array
+CC=c(113.5, 114.4)
+DD=c(-23.29, -21.7)
+LONGSEQ=CC[1]:CC[2]
+LATSEQ=seq(ceiling(DD[1]),ceiling(DD[2]),by=1)
+LATSEQ2=seq(ceiling(DD[1]),ceiling(DD[2]),by=2)
+fn.plt.mp(CC,DD,"NO",'YES')
+box(lwd=2,col="forestgreen")
+fnX()
+points(Tab$Long,Tab$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="pink",
+       bg=rgb(.5,.1,.1,alpha=.2))
+points(Tab3$Long,Tab3$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="blue",
+       bg=rgb(.1,.1,.5,alpha=.2))
+legend('topright',"1",bty="n",cex=3)
+
+
+
+# Whole WA
+XX=c(112,119)
+YY=c(-35.5,-21.5)
+LONGSEQ=XX[1]:XX[2]
+LATSEQ=seq(ceiling(YY[1]),ceiling(YY[2]),by=1)
+LATSEQ2=seq(ceiling(YY[1]),ceiling(YY[2]),by=2)
+fn.plt.mp(XX,YY,"NO",'YES')
+axis(side = 1, at =LONGSEQ, labels = paste(LONGSEQ,"ºE",sep=""), tcl = .5,las=1,cex.axis=1.5,padj=-.5)
+axis(side = 4, at = LATSEQ, labels =F,tcl = .5,las=2,cex.axis=1.5,hadj=.15)
+axis(side = 4, at = LATSEQ2, labels =paste(-LATSEQ2,"ºS",sep=""),tcl = .5,las=2,cex.axis=1.5,hadj=.15)
+box(lwd=1.5)
+polygon(x=Rottnest.Is$Longitude,y=Rottnest.Is$Latitude,col="grey")  #add missing islands
+polygon(x=Garden.Is$Longitude,y=Garden.Is$Latitude,col="grey")
+text(117,-31.5,"Perth array",cex=2,col='grey10',font=2)
+text(117.5,-34,"Southern",cex=2,col='grey10',font=2)
+text(117.5,-34.5,"array",cex=2,col='grey10',font=2)
+text(115.5,-22.5,"Ningaloo",cex=2,col='grey10',font=2)
+text(115.5,-23,"array",cex=2,col='grey10',font=2)
+fn.poli(EE,FF,'darkgreen',2)
+text(113.1268,-21.91353,"1",cex=3,font=2)
+fn.poli(EE1,FF1,'darkgreen',2)
+text(114.8443,-32.04497,"2",cex=3,font=2)
+fn.poli(CC, DD,'darkgreen',2)
+text(114.2326,-34.42276,"3",cex=3,font=2)
+fnX(x=.7)
+Shark.bay=cbind(113,-25.497)
+Cape.Leeuwin=cbind(115.18,-34.17)
+
+points(Cape.Leeuwin[1],Cape.Leeuwin[2],pch=21,col=1,bg=rgb(.1,.9,.3,alpha=.5),cex=3.5)
+points(Shark.bay[1],Shark.bay[2],pch=21,col=1,bg=rgb(.1,.9,.3,alpha=.5),cex=3.5)
+#legend(115.5,-26,c("Releases","Receiver"),pch= c(4,1),col=c("black","grey40"),cex=2.2,bty='n')
+LEG=round(quantile(Tab5$detections,probs=c(.15,.5,.95)))
+scalebar(100,cex=1.5)
+legend("right",paste(LEG),pch=21,col="black",cex = 2, bg=rgb(.1,.1,.1,alpha=.2),
+       pt.cex=fn.scale(LEG,scaler=10),bty='n',
+       y.intersp = c(1,1,1.5), x.intersp = 1.3)
+text(117.5,-27.5,"No. of detections",cex=2)
+points(REls$ReleaseLongitude,REls$ReleaseLatitude,pch=24,cex=2,bg="orange")
+
+dev.off()
+
+
+
+#Stand alone Perth array
+tiff(file="Figure 1_appendix_Perth.Array.tiff",width = 3000, height = 2000,   
+     units = "px", res = 300,compression = "lzw")
+par(mar = c(3.2, 5, 0.95, 1),oma=c(1,.1,.1,1),mgp=c(1,.75,0))
+EE1=c(115.17,116)
+FF1=c(-32.3,-31.8)
+LONGSEQ=EE1[1]:EE1[2]
+LATSEQ=seq(ceiling(FF1[1]),ceiling(FF1[2]),by=1)
+LATSEQ2=seq(ceiling(FF1[1]),ceiling(FF1[2]),by=2)
+fn.plt.mp(EE1,FF1,"NO",'YES')
+box(lwd=2,col="black")
+polygon(x=Rottnest.Is$Longitude,y=Rottnest.Is$Latitude,col="grey")  #add missing islands
+polygon(x=Garden.Is$Longitude,y=Garden.Is$Latitude,col="grey")
+fnX()
+points(Tab5$Long,Tab5$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="pink",
+       bg=rgb(.5,.1,.1,alpha=.2))
+points(Tab3$Long,Tab3$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="blue",
+       bg=rgb(.1,.1,.5,alpha=.2))
+
+text(115.75,-32.09,"Cockburn",cex=1.5,col='grey10',font=2,pos=4)
+text(115.8,-32.15,"sound",cex=1.5,col='grey10',font=2,pos=4)
+legend('topright',"2",bty="n",cex=3)
+LEG=round(quantile(Tab5$detections,probs=c(.15,.5,.95)))
+scalebar(25,cex=1.5)
+legend("topleft",paste(LEG),pch=21,col="black",cex = 2, bg=rgb(.1,.1,.1,alpha=.2),
+       pt.cex=fn.scale(LEG,scaler=10),bty='n',title='No. of detections',
+       y.intersp = c(1,1,1.25), x.intersp = 1.3)
+axis(side = 1, at =c(115.35,115.7), labels = paste(c(115.35,115.7),"ºE",sep=""), tcl = .5,las=1,cex.axis=1.5,padj=-.5)
+axis(side = 4, at = c(-32,-32.2), labels =paste(-c(-32,-32.2),"ºS",sep=""),tcl = .5,las=2,cex.axis=1.5,hadj=.15)
+dev.off()
