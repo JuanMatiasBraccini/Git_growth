@@ -1,5 +1,6 @@
 library(plotrix)
 library(mvtnorm)
+library(dplyr)
 
 #Data
 setwd('C:\\Matias\\Analyses\\Growth\\Greynurse recapture')
@@ -158,8 +159,27 @@ Garden.Is=subset(PerthIs,ID%in%c("ROTT3"))
 STATIONS=read.csv('Receivers.csv',stringsAsFactors = F)
 #For SCALER
 # fuür SMN
-#d=read.csv("Acous.tags_SMN.csv", sep = ";")
-#SMN=read.csv("Acous.tags_SMN.csv", sep = ";")
+d=read.csv("Acous.tags_SMN.csv", sep = ";")
+
+SMN=SMN%>%mutate(DateTime.local=as.POSIXct(DateTime.local,format="%d/%m/%y %H:%M"),
+                 Date.local=as.Date(SMN$Date.local,format="%d/%m/%y"),
+                 Time.local=hms(Time.local),
+                 Year=year(Date.local),
+                 Month=month(Date.local),
+                 Hour=hour(Time.local),
+                 Mins=minute(Time.local))%>%
+                arrange(DateTime.local)
+
+d=d%>%mutate(DateTime.local=as.POSIXct(DateTime.local,format="%d/%m/%y %H:%M"),
+             Date.local=as.Date(SMN$Date.local,format="%d/%m/%y"),
+             Time.local=hms(Time.local),
+             Year=year(Date.local),
+             Month=month(Date.local),
+             Hour=hour(Time.local),
+             Mins=minute(Time.local))%>%
+            arrange(DateTime.local)
+
+
 d$ReleaseLatitude=-abs(d$ReleaseLatitude)
 d$Latitude=-abs(d$Latitude)
 d=subset(SMN,Sex=="F")
@@ -352,8 +372,8 @@ points(Tab5$Long,Tab5$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="p
 points(Tab3$Long,Tab3$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="blue",
        bg=rgb(.1,.1,.5,alpha=.2))
 
-text(115.75,-32.09,"Cockburn",cex=1.5,col='grey10',font=2,pos=4)
-text(115.8,-32.15,"sound",cex=1.5,col='grey10',font=2,pos=4)
+text(115.82,-32.09,"Cockburn",cex=1.5,col='grey10',font=2)
+text(115.82,-32.12,"sound",cex=1.5,col='grey10',font=2)
 legend('topright',"2",bty="n",cex=3)
 LEG=round(quantile(Tab5$detections,probs=c(.15,.5,.95)))
 scalebar(25,cex=1.5)
@@ -362,4 +382,128 @@ legend("topleft",paste(LEG),pch=21,col="black",cex = 2, bg=rgb(.1,.1,.1,alpha=.2
        y.intersp = c(1,1,1.25), x.intersp = 1.3)
 axis(side = 1, at =c(115.35,115.7), labels = paste(c(115.35,115.7),"ºE",sep=""), tcl = .5,las=1,cex.axis=1.5,padj=-.5)
 axis(side = 4, at = c(-32,-32.2), labels =paste(-c(-32,-32.2),"ºS",sep=""),tcl = .5,las=2,cex.axis=1.5,hadj=.15)
+dev.off()
+
+
+
+
+#Figure S3
+#Stand alone Perth array
+EE1=c(115.17,116)
+FF1=c(-32.3,-31.8)
+LONGSEQ=EE1[1]:EE1[2]
+LATSEQ=seq(ceiling(FF1[1]),ceiling(FF1[2]),by=1)
+LATSEQ2=seq(ceiling(FF1[1]),ceiling(FF1[2]),by=2)
+
+This.mn=c(10:12,1:5)
+This.yr=c(rep(2014,3),rep(2015,5))
+fn.scale=function(x,scaler) scaler*log(x)/max(log(Tab5$detections))
+#Tab1=table(m$Station)
+
+tiff(file="Figure 3_appendix.tiff",width = 1400, height = 2000,   
+     units = "px", res = 300,compression = "lzw")
+par(mfcol=c(4,2),mar = c(3.2, 5, 0.95, 2),oma=c(1,4,.1,1),mgp=c(1,.75,0))
+for(i in 1:length(This.mn))
+{
+  xx=subset(m,Year==This.yr[i] & Month==This.mn[i])
+  Tab5=table(xx$Station)
+  Tab5=data.frame(Tab5)
+  names(Tab5)=c('Station',"detections")
+  Tab6=data.frame(do.call('rbind', strsplit(as.character(Tab5$Station),' ',fixed=TRUE)))
+  names(Tab6)=c("Long","Lat")
+  Tab5=cbind(Tab5,Tab6)
+  Tab5$Long=as.numeric(as.character(Tab5$Long))
+  Tab5$Lat=as.numeric(as.character(Tab5$Lat))
+  
+  fn.plt.mp(EE1,FF1,"NO",'YES')
+  box(lwd=2,col="black")
+  polygon(x=Rottnest.Is$Longitude,y=Rottnest.Is$Latitude,col="grey")  #add missing islands
+  polygon(x=Garden.Is$Longitude,y=Garden.Is$Latitude,col="grey")
+  fnX()
+  points(Tab5$Long,Tab5$Lat, pch=21,cex=fn.scale(Tab5$detections,scaler=10),col="pink",
+         bg=rgb(.5,.1,.1,alpha=.2))
+  legend('bottomleft',paste(as.character(month(xx$Month[1],label = TRUE, abbr = FALSE)),
+                             This.yr[i]),bty="n",cex=1.1)
+  LEG=round(quantile(Tab5$detections,probs=c(.5)))
+  if(i==8)scalebar(25,xy=c(115.75,-32.26),cex=1.5)
+  legend("topleft",paste(LEG),pch=21,col="black",cex = .9, bg=rgb(.1,.1,.1,alpha=.2),
+         pt.cex=fn.scale(LEG,scaler=10),bty='n',title='No. of detections',
+         y.intersp = c(1.8), x.intersp = c(-.5))
+  axis(side = 1, at =c(115.35,115.7), labels = F, tcl = .5,las=1,cex.axis=1.5,padj=-.5)
+  axis(side = 2, at = c(-32,-32.2), labels =F,tcl = .5,las=2,cex.axis=1.5,hadj=.8)
+if(i%in%c(4,8))  axis(side = 1, at =c(115.35,115.7), labels = paste(c(115.35,115.7),"ºE",sep=""), tcl = .5,las=1,cex.axis=1.5,padj=-.5)
+ if(i%in%1:4)  axis(side = 2, at = c(-32,-32.2), labels =paste(-c(-32,-32.2),"ºS",sep=""),tcl = .5,las=2,cex.axis=1.5,hadj=.8)
+  
+  
+}
+dev.off()
+
+
+#Residency 
+This.mn=c(10:12,1)
+This.yr=c(rep(2014,3),rep(2015,1))
+
+tiff(file="Figure 5_appendix.tiff",width = 2000, height = 2000,   
+     units = "px", res = 300,compression = "lzw")
+par(mfcol=c(2,2),mar = c(2, .5, 0.95, .5),oma=c(1,.1,.1,.1),mgp=c(1,.75,0))
+for(i in 1:length(This.mn))
+{
+  xx=subset(SMN,Sex=="F" & Year==This.yr[i] & Month==This.mn[i])%>%
+        mutate(day=day(Date.local),
+               day.hour=day+(Hour/24))
+    
+  xx=xx[!duplicated(xx$day.hour),]
+  plot(xx$day.hour,rep(1,nrow(xx)),xlim=c(0,24),xlab="",ylab="",yaxt='n',
+       main=as.character(month(xx$Month[1],label = TRUE, abbr = FALSE)),
+       pch=".",cex=2,col=2)
+}
+mtext("Day-hour",1,outer=T,cex=1.5)
+dev.off()
+
+
+#Max distance and time
+xx=subset(SMN,Sex=="F")
+xx=xx[-1,]%>%
+        arrange(DateTime.local)%>%
+        mutate(SerialNumber.prev=lag(SerialNumber,1),
+               Latitude.prev=lag(Latitude,1),
+               Longitude.prev=lag(Longitude,1),
+               DateTime.local.prev=lag(DateTime.local,1),
+               Distance=NA,
+               Time=ifelse(!SerialNumber.prev==SerialNumber,DateTime.local-DateTime.local.prev,NA))
+for(i in 1:nrow(xx))
+{
+  if(!xx$SerialNumber.prev[i]==xx$SerialNumber[i] & !is.na(xx$Latitude.prev[i]))
+  {
+    xx$Distance[i]=with(xx,distCosine(c(Longitude[i],Latitude[i]),
+                                      c(Longitude.prev[i],Latitude.prev[i]))/1000)
+  }
+
+}
+xx[which.max(xx$Distance),]
+
+
+
+#Daily movement 
+This.mn=c(10:12,1)
+This.yr=c(rep(2014,3),rep(2015,1))
+
+tiff(file="Figure 4_appendix.tiff",width = 2000, height = 2000,   
+     units = "px", res = 300,compression = "lzw")
+par(mfcol=c(2,2),mar = c(2, 2, 0.95, .5),oma=c(1,2,.1,.1),mgp=c(1,.75,0),las=1)
+for(i in 1:length(This.mn))
+{
+  xx=subset(SMN,Sex=="F" & Year==This.yr[i] & Month==This.mn[i])%>%
+    arrange(DateTime.local)%>%
+    mutate(SerialNumber.prev=lag(SerialNumber,1),
+           same=ifelse(SerialNumber.prev==SerialNumber,"YES","NO"))%>%
+    filter(same=="NO")
+
+  hist(xx$Hour,breaks=24,col="grey",ylab="",xlab="",
+       main=paste(as.character(month(xx$Month[1],label = TRUE, abbr = FALSE)),
+                  This.yr[i]))
+  box()
+}
+mtext("Frequency",2,outer=T,cex=1.5,las=3)
+mtext("Hour",1,outer=T,cex=1.5)
 dev.off()
