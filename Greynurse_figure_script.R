@@ -3,7 +3,8 @@ library(mvtnorm)
 library(dplyr)
 
 #Data
-setwd('C:\\Matias\\Analyses\\Growth\\Greynurse recapture')
+handl_OneDrive=function(x)paste('C:/Users/myb/OneDrive - Department of Primary Industries and Regional Development/Matias',x,sep='/')
+setwd(handl_OneDrive('Analyses\\Growth\\Greynurse recapture'))
   #tag and recapture info
 TL.rel=188
 TL.rec=246

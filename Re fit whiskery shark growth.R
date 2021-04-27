@@ -1,6 +1,7 @@
 # Re fit whiskery shark growth model
+handl_OneDrive=function(x)paste('C:/Users/myb/OneDrive - Department of Primary Industries and Regional Development/Matias',x,sep='/')
 
-DATA=read.csv("C:/Matias/Data/Age and growth/Whiskery.csv")
+DATA=read.csv(handl_OneDrive("Data/Age and growth/Whiskery.csv"))
 
 #Add half a year to Stevens' data s done by simpfendorfer et al 2000
 DATA$Counts=with(DATA,ifelse(Source=="Stevens 1990",Counts+0.5,Counts))
@@ -15,7 +16,7 @@ DATA$FL=with(DATA,ifelse(Source=="Stevens 1990",TL_to_FL(TL,a.w,b.w),FL))
 Stevens.data=subset(DATA,Source=="Stevens 1990")
 Simpfen.data=subset(DATA,Source=="Simpfendorfer et al 2000")
 
-write.csv(Simpfen.data,"C:/Matias/Data/Age and growth/Simpfen.data.csv",row.names=F)
+write.csv(Simpfen.data,handl_OneDrive("Data/Age and growth/Simpfen.data.csv"),row.names=F)
 
   #Size at birth
 #Lo=33.5 #LT
