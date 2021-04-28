@@ -1,5 +1,5 @@
 # Re fit whiskery shark growth model
-handl_OneDrive=function(x)paste('C:/Users/myb/OneDrive - Department of Primary Industries and Regional Development/Matias',x,sep='/')
+if(!exists('handl_OneDrive')) source('C:/Users/myb/OneDrive - Department of Primary Industries and Regional Development/Matias/Analyses/SOURCE_SCRIPTS/Git_other/handl_OneDrive.R')
 
 DATA=read.csv(handl_OneDrive("Data/Age and growth/Whiskery.csv"))
 
